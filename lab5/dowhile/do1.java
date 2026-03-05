@@ -1,0 +1,18 @@
+package dowhile;
+
+import java.util.Scanner;
+public class do1 {
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        String password;
+
+        do {
+            System.out.print("Пароль енгізіңіз: ");
+            password = sc.next();
+        } while (!password.equals("1234"));
+
+        System.out.println("Дұрыс!");
+    }
+}
