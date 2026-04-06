@@ -1,50 +1,47 @@
-package MyGraph;
+ective float4 _vcolor_S0 = {0, 0, 0, 0};
+static noperspective float2 _varccoord_S0 = {0, 0};
 
-import javax.swing.*;
-import java.awt.*;
+cbuffer DriverConstants : register(b1)
+{
+    float4 dx_ViewAdjust : packoffset(c1);
+    float2 dx_ViewCoords : packoffset(c2);
+    float2 dx_ViewScale  : packoffset(c3);
+    float clipControlOrigin : packoffset(c3.z);
+    float clipControlZeroToOne : packoffset(c3.w);
+};
 
-public class task3 extends JPanel {
+@@ VERTEX ATTRIBUTES @@
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        int width = getWidth();
-        int height = getHeight();
-        int originX = width / 2;
-        int originY = height / 2;
-
-        // Координаттар жүйесін (осьтерді) сызу
-        g2.drawLine(0, originY, width, originY); // X осі
-        g2.drawLine(originX, 0, originX, height); // Y осі
-
-        g2.setColor(Color.RED);
-
-        // Масштаб коэффициенті (график көрінуі үшін)
-        double scale = 50.0;
-
-        // Графикті нүктелер арқылы сызу
-        for (double x = -5; x <= 5; x += 0.01) {
-            // Функция: y = -6x^2 + 3x
-            double y = -6 * Math.pow(x, 2) + 3 * x;
-
-            // Экрандағы координаталарға айналдыру
-            int screenX = (int) (originX + x * scale);
-            int screenY = (int) (originY - y * scale);
-
-            // Нүктені салу
-            g2.fillOval(screenX, screenY, 2, 2);
-        }
+VS_OUTPUT generateOutput(VS_INPUT input)
+{
+    VS_OUTPUT output;
+    output.gl_Position = gl_Position;
+    output.dx_Position.x = gl_Position.x;
+    output.dx_Position.y = clipControlOrigin * gl_Position.y;
+    if (clipControlZeroToOne)
+    {
+        output.dx_Position.z = gl_Position.z;
+    } else {
+        output.dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;
     }
+    output.dx_Position.w = gl_Position.w;
+    output.v0 = _vcolor_S0;
+    output.v1 = _varccoord_S0;
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("y = -6x^2 + 3x графигі");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(new task3());
-        frame.setSize(600, 600);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-    }
+    return output;
 }
+
+VS_OUTPUT main(VS_INPUT input){
+    initAttributes(input);
+
+(_vcolor_S0 = _color);
+float _aa_bloat_multiplier2569 = {1.0};
+float2 _corner2570 = _corner_and_radius_outsets.xy;
+float2 _radius_outset2571 = _corner_and_radius_outsets.zw;
+float2 _aa_bloat_direction2572 = _aa_bloat_and_coverage.xy;
+float _is_linear_coverage2573 = _aa_bloat_and_coverage.w;
+float2 _pixellength2574 = rsqrt(vec2_ctor(dot(_skew.xz, _skew.xz), dot(_skew.yw, _skew.yw)));
+float4 _normalized_axis_dirs2575 = (_skew * _pixellength2574.xyxy);
+float2 _axiswidths2576 = (abs(_normalized_axis_dirs2575.xy) + abs(_normalized_axis_dirs2575.zw));
+float2 _aa_bloatradius2577 = ((_axiswidths2576 * _pixellength2574) * 0.5);
+float4 _radii_and_neighbors2578 = mul(_radii_selector, transpose(mat4_ctor_float4_float4_float4_float4(_radii_x, _radii_y, _r

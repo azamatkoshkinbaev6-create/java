@@ -1,61 +1,63 @@
-package MyGraph;
+efine ATOMIC_COUNTER_ARRAY_STRIDE 4
 
-import javax.swing.*;
-import java.awt.*;
+// Attributes
+static float4 _radii_selector = {0, 0, 0, 0};
+static float4 _corner_and_radius_outsets = {0, 0, 0, 0};
+static float4 _aa_bloat_and_coverage = {0, 0, 0, 0};
+static float4 _radii_x = {0, 0, 0, 0};
+static float4 _radii_y = {0, 0, 0, 0};
+static float4 _skew = {0, 0, 0, 0};
+static float2 _translate_and_localrotate = {0, 0};
+static float4 _color = {0, 0, 0, 0};
 
-public class task6 extends JPanel {
+static float4 gl_Position = float4(0, 0, 0, 0);
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2 = (Graphics2D) g;
+// Varyings
+static noperspective float4 _vcolor_S0 = {0, 0, 0, 0};
+static noperspective float2 _varccoord_S0 = {0, 0};
 
-        // Сызықтың сапасын жақсарту (Antialiasing)
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+cbuffer DriverConstants : register(b1)
+{
+    float4 dx_ViewAdjust : packoffset(c1);
+    float2 dx_ViewCoords : packoffset(c2);
+    float2 dx_ViewScale  : packoffset(c3);
+    float clipControlOrigin : packoffset(c3.z);
+    float clipControlZeroToOne : packoffset(c3.w);
+};
 
-        int width = getWidth();
-        int height = getHeight();
-        int centerX = width / 2;
-        int centerY = height / 2;
+@@ VERTEX ATTRIBUTES @@
 
-        // Координаттар осін сызу (X және Y)
-        g2.setColor(Color.LIGHT_GRAY);
-        g2.drawLine(0, centerY, width, centerY); // X осі
-        g2.drawLine(centerX, 0, centerX, height); // Y осі
-
-        // Графиктің түсі мен қалыңдығы
-        g2.setColor(Color.BLUE);
-        g2.setStroke(new BasicStroke(2f));
-
-        // Графикті нүктелер арқылы құрастыру
-        int prevX = 0;
-        int prevY = centerY - (int) (Math.sin((double) (0 - centerX) / 20) * 50);
-
-        for (int x = 1; x < width; x++) {
-            // Математикалық x мәнін есептеу (масштабтау: /20)
-            double mathX = (double) (x - centerX) / 20;
-            // Математикалық y мәні (sin)
-            double mathY = Math.sin(mathX);
-
-            // Экрандағы y нүктесін есептеу (масштабтау: *50 және ортаға жылжыту)
-            int screenY = centerY - (int) (mathY * 50);
-
-            // Алдыңғы нүкте мен қазіргі нүктені сызықпен қосу
-            g2.drawLine(prevX, prevY, x, screenY);
-
-            prevX = x;
-            prevY = screenY;
-        }
+VS_OUTPUT generateOutput(VS_INPUT input)
+{
+    VS_OUTPUT output;
+    output.gl_Position = gl_Position;
+    output.dx_Position.x = gl_Position.x;
+    output.dx_Position.y = clipControlOrigin * gl_Position.y;
+    if (clipControlZeroToOne)
+    {
+        output.dx_Position.z = gl_Position.z;
+    } else {
+        output.dx_Position.z = (gl_Position.z + gl_Position.w) * 0.5;
     }
+    output.dx_Position.w = gl_Position.w;
+    output.gl_FragCoord = gl_Position;
+    output.v0 = _vcolor_S0;
+    output.v1 = _varccoord_S0;
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Java-дағы Sin(x) графигі");
-        task6 panel = new task6();
-
-        frame.add(panel);
-        frame.setSize(800, 400);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-    }
+    return output;
 }
+
+VS_OUTPUT main(VS_INPUT input){
+    initAttributes(input);
+
+(_vcolor_S0 = _color);
+float _aa_bloat_multiplier5637 = {1.0};
+float2 _corner5638 = _corner_and_radius_outsets.xy;
+float2 _radius_outset5639 = _corner_and_radius_outsets.zw;
+float2 _aa_bloat_direction5640 = _aa_bloat_and_coverage.xy;
+float _is_linear_coverage5641 = _aa_bloat_and_coverage.w;
+float2 _pixellength5642 = rsqrt(vec2_ctor(dot(_skew.xz, _skew.xz), dot(_skew.yw, _skew.yw)));
+float4 _normalized_axis_dirs5643 = (_skew * _pixellength5642.xyxy);
+float2 _axiswidths5644 = (abs(_normalized_axis_dirs5643.xy) + abs(_normalized_axis_dirs5643.zw));
+float2 _aa_bloatradius5645 = ((_axiswidths5644 * _pixellength5642) * 0.5);
+float4 _radii_and_neighbors5646 = mul(_radii_selector, transpose(mat4_ctor_float4_float4_float4_float4(_radii_x, _radii_y, _rad
